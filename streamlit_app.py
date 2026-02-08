@@ -8,6 +8,8 @@ from sklearn.metrics import (
     precision_score, recall_score, f1_score,
     matthews_corrcoef, classification_report, confusion_matrix
 )
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 MODELS_DIR = Path("model")                 # where you saved .pkl models
 DEFAULT_TEST_PATH = Path("test_data.csv")  # saved earlier in your notebook
@@ -109,29 +111,69 @@ def main():
     preview = pd.DataFrame({"prediction": y_pred[:10]})
     st.dataframe(preview, use_container_width=True)
 
-    # Metrics
-    st.subheader("Evaluation Metrics")
+    # Metrics - Side by side layout
+    st.subheader("Model Performance Evaluation")
     if y_true is None:
         st.warning("Upload a CSV with a 'target' column to compute metrics.")
     else:
         metrics, report_text = evaluate(y_true, y_pred, y_score)
-        # Nicely formatted metrics table
-        metrics_rows = [{"metric": k, "value": (v if v is not None else "N/A")} for k, v in metrics.items()]
-        st.table(pd.DataFrame(metrics_rows))
         
-        # Confusion Matrix
-        st.subheader("Confusion Matrix")
-        cm = confusion_matrix(y_true, y_pred)
-        cm_df = pd.DataFrame(cm, 
-                            index=['Actual: Benign (0)', 'Actual: Malignant (1)'],
-                            columns=['Predicted: Benign (0)', 'Predicted: Malignant (1)'])
-        st.table(cm_df)
+        # Create three columns for side-by-side display
+        col1, col2, col3 = st.columns(3)
         
-        # Classification report
-        st.subheader("Classification Report")
-        st.text(report_text)
+        with col1:
+            st.markdown("#### Evaluation Metrics")
+            metrics_df = pd.DataFrame([
+                {"Metric": "Accuracy", "Value": f"{metrics['accuracy']:.4f}"},
+                {"Metric": "AUC", "Value": f"{metrics['auc']:.4f}" if metrics['auc'] is not None else "N/A"},
+                {"Metric": "Precision", "Value": f"{metrics['precision']:.4f}"},
+                {"Metric": "Recall", "Value": f"{metrics['recall']:.4f}"},
+                {"Metric": "F1 Score", "Value": f"{metrics['f1']:.4f}"},
+                {"Metric": "MCC", "Value": f"{metrics['mcc']:.4f}"}
+            ])
+            st.table(metrics_df)
+        
+        with col2:
+            st.markdown("#### Confusion Matrix")
+            cm = confusion_matrix(y_true, y_pred)
+            cm_df = pd.DataFrame(cm, 
+                                index=['Actual: 0', 'Actual: 1'],
+                                columns=['Pred: 0', 'Pred: 1'])
+            st.table(cm_df)
+            st.caption("0=Benign, 1=Malignant")
+        
+        with col3:
+            st.markdown("#### Classification Report")
+            # Parse classification report into dataframe
+            report_dict = classification_report(y_true, y_pred, output_dict=True)
+            report_df = pd.DataFrame({
+                'Class': ['0 (Benign)', '1 (Malignant)', 'Accuracy', 'Macro Avg', 'Weighted Avg'],
+                'Precision': [
+                    f"{report_dict['0']['precision']:.3f}",
+                    f"{report_dict['1']['precision']:.3f}",
+                    "-",
+                    f"{report_dict['macro avg']['precision']:.3f}",
+                    f"{report_dict['weighted avg']['precision']:.3f}"
+                ],
+                'Recall': [
+                    f"{report_dict['0']['recall']:.3f}",
+                    f"{report_dict['1']['recall']:.3f}",
+                    "-",
+                    f"{report_dict['macro avg']['recall']:.3f}",
+                    f"{report_dict['weighted avg']['recall']:.3f}"
+                ],
+                'F1-Score': [
+                    f"{report_dict['0']['f1-score']:.3f}",
+                    f"{report_dict['1']['f1-score']:.3f}",
+                    f"{report_dict['accuracy']:.3f}",
+                    f"{report_dict['macro avg']['f1-score']:.3f}",
+                    f"{report_dict['weighted avg']['f1-score']:.3f}"
+                ]
+            })
+            st.table(report_df)
+        
         if y_score is None:
-            st.caption("AUC not available for this model (no predict_proba/decision_function).")
+            st.caption("⚠️ AUC not available for this model (no predict_proba/decision_function).")
 
     st.divider()
     st.caption(f"Models directory: {MODELS_DIR}")
