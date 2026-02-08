@@ -137,45 +137,65 @@ def main():
     else:
         y_true = None
         X = df.to_numpy()
-        st.info("No 'target' column found. Metrics requiring ground truth will be unavailable.")
+        st.warning("⚠️ No 'target' column found. Metrics requiring ground truth will be unavailable.")
 
     # Predict
     y_pred = model.predict(X)
     y_score = get_scores(model, X)
 
+    st.divider()
     # Metrics - Side by side layout
-    st.subheader("Model Performance Evaluation")
+    st.markdown("### 📊 **Step 4: Evaluation Results**")
     if y_true is None:
-        st.warning("Upload a CSV with a 'target' column to compute metrics.")
+        st.error("❌ Upload a CSV with a 'target' column to compute metrics.")
     else:
         metrics, report_text = evaluate(y_true, y_pred, y_score)
         
-        # Create two columns for Evaluation Metrics and Confusion Matrix
+        # Display key metrics with colored cards
+        st.markdown("#### 🎯 Key Performance Metrics")
+        metric_cols = st.columns(6)
+        
+        with metric_cols[0]:
+            st.metric("📈 Accuracy", f"{metrics['accuracy']:.4f}", delta=None)
+        with metric_cols[1]:
+            st.metric("📉 AUC", f"{metrics['auc']:.4f}" if metrics['auc'] is not None else "N/A", delta=None)
+        with metric_cols[2]:
+            st.metric("🎯 Precision", f"{metrics['precision']:.4f}", delta=None)
+        with metric_cols[3]:
+            st.metric("🔍 Recall", f"{metrics['recall']:.4f}", delta=None)
+        with metric_cols[4]:
+            st.metric("⚖️ F1 Score", f"{metrics['f1']:.4f}", delta=None)
+        with metric_cols[5]:
+            st.metric("📊 MCC", f"{metrics['mcc']:.4f}", delta=None)
+        
+        st.markdown("---")
+        
+        # Create two columns for Confusion Matrix and Classification Report
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### Evaluation Metrics")
-            metrics_df = pd.DataFrame([
+            st.markdown("#### 🔢 **Confusion Matrix**")
+            cm = confusion_matrix(y_true, y_pred)
+            cm_df = pd.DataFrame(cm, 
+                                index=['Actual: 0', 'Actual: 1'],
+                                columns=['Pred: 0', 'Pred: 1'])
+            st.dataframe(cm_df, use_container_width=True)
+            st.caption("💡 0 = Benign | 1 = Malignant")
+        
+        with col2:
+            st.markdown("#### 📋 **Detailed Metrics Table**")
+            metrics_detail_df = pd.DataFrame([
                 {"Metric": "Accuracy", "Value": f"{metrics['accuracy']:.4f}"},
-                {"Metric": "AUC", "Value": f"{metrics['auc']:.4f}" if metrics['auc'] is not None else "N/A"},
+                {"Metric": "AUC Score", "Value": f"{metrics['auc']:.4f}" if metrics['auc'] is not None else "N/A"},
                 {"Metric": "Precision", "Value": f"{metrics['precision']:.4f}"},
                 {"Metric": "Recall", "Value": f"{metrics['recall']:.4f}"},
                 {"Metric": "F1 Score", "Value": f"{metrics['f1']:.4f}"},
                 {"Metric": "MCC", "Value": f"{metrics['mcc']:.4f}"}
             ])
-            st.table(metrics_df)
-        
-        with col2:
-            st.markdown("#### Confusion Matrix")
-            cm = confusion_matrix(y_true, y_pred)
-            cm_df = pd.DataFrame(cm, 
-                                index=['Actual: 0', 'Actual: 1'],
-                                columns=['Pred: 0', 'Pred: 1'])
-            st.table(cm_df)
-            st.caption("0=Benign, 1=Malignant")
+            st.dataframe(metrics_detail_df, use_container_width=True, hide_index=True)
         
         # Classification Report - Full width below
-        st.markdown("#### Classification Report")
+        st.markdown("#### 📊 **Classification Report**")
         # Parse classification report into dataframe
         report_dict = classification_report(y_true, y_pred, output_dict=True)
         report_df = pd.DataFrame({
@@ -202,13 +222,18 @@ def main():
                 f"{report_dict['weighted avg']['f1-score']:.3f}"
             ]
         })
-        st.table(report_df)
+        st.dataframe(report_df, use_container_width=True, hide_index=True)
         
         if y_score is None:
             st.caption("⚠️ AUC not available for this model (no predict_proba/decision_function).")
 
     st.divider()
-    st.caption(f"Models directory: {MODELS_DIR}")
+    st.markdown("---")
+    st.markdown("""
+        <div style='text-align: center; color: #666; padding: 10px;'>
+            📁 <b>Models Directory:</b> model/ | 🎓 <b>BITS Pilani - ML Assignment 2</b>
+        </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
