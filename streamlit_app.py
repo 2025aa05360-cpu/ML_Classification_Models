@@ -58,11 +58,15 @@ def main():
         <style>
         .main-header {
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             color: white;
             text-align: center;
             margin-bottom: 20px;
+        }
+        .main-header h1 {
+            font-size: 1.8rem;
+            margin: 0;
         }
         .metric-box {
             background-color: #f0f2f6;
@@ -82,7 +86,7 @@ def main():
     
     # Colorful header
     st.markdown('<div class="main-header"><h1>🩺 Breast Cancer Classification — Model Evaluation</h1></div>', unsafe_allow_html=True)
-    st.markdown("### 📋 **Workflow Steps**")
+    st.markdown("#### 📋 **Workflow Steps**")
     st.markdown("**Step 1:** 📥 Download test dataset (if required) → **Step 2:** 📤 Upload test dataset → **Step 3:** 🤖 Select the model → **Step 4:** 📊 View evaluation metrics")
     st.divider()
 
@@ -90,7 +94,7 @@ def main():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### 📥 **Step 1: Download Dataset**")
+        st.markdown("#### 📥 **Step 1: Download Dataset**")
         # Download saved test_data.csv (if present)
         if DEFAULT_TEST_PATH.exists():
             with DEFAULT_TEST_PATH.open("rb") as f:
@@ -106,14 +110,14 @@ def main():
             st.info("💡 Saved test_data.csv not found in workspace.")
     
     with col2:
-        st.markdown("### 📤 **Step 2: Upload Dataset**")
+        st.markdown("#### 📤 **Step 2: Upload Dataset**")
         # Upload test CSV
         uploaded = st.file_uploader("Drag and drop your test CSV file here", type=["csv"], label_visibility="collapsed")
 
     st.divider()
     
     # Model selection with emoji
-    st.markdown("### 🤖 **Step 3: Select Model**")
+    st.markdown("#### 🤖 **Step 3: Select Model**")
     models = list_models(MODELS_DIR)
     if not models:
         st.error("❌ No models found in model/. Train and save models first.")
@@ -145,36 +149,17 @@ def main():
 
     st.divider()
     # Metrics - Side by side layout
-    st.markdown("### 📊 **Step 4: Evaluation Results**")
+    st.markdown("#### 📊 **Step 4: Evaluation Results**")
     if y_true is None:
         st.error("❌ Upload a CSV with a 'target' column to compute metrics.")
     else:
         metrics, report_text = evaluate(y_true, y_pred, y_score)
         
-        # Display key metrics with colored cards
-        st.markdown("#### 🎯 Key Performance Metrics")
-        metric_cols = st.columns(6)
-        
-        with metric_cols[0]:
-            st.metric("📈 Accuracy", f"{metrics['accuracy']:.4f}", delta=None)
-        with metric_cols[1]:
-            st.metric("📉 AUC", f"{metrics['auc']:.4f}" if metrics['auc'] is not None else "N/A", delta=None)
-        with metric_cols[2]:
-            st.metric("🎯 Precision", f"{metrics['precision']:.4f}", delta=None)
-        with metric_cols[3]:
-            st.metric("🔍 Recall", f"{metrics['recall']:.4f}", delta=None)
-        with metric_cols[4]:
-            st.metric("⚖️ F1 Score", f"{metrics['f1']:.4f}", delta=None)
-        with metric_cols[5]:
-            st.metric("📊 MCC", f"{metrics['mcc']:.4f}", delta=None)
-        
-        st.markdown("---")
-        
-        # Create two columns for Confusion Matrix and Classification Report
+        # Create two columns for Confusion Matrix and Detailed Metrics
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 🔢 **Confusion Matrix**")
+            st.markdown("##### 🔢 **Confusion Matrix**")
             cm = confusion_matrix(y_true, y_pred)
             cm_df = pd.DataFrame(cm, 
                                 index=['Actual: 0', 'Actual: 1'],
@@ -183,7 +168,7 @@ def main():
             st.caption("💡 0 = Benign | 1 = Malignant")
         
         with col2:
-            st.markdown("#### 📋 **Detailed Metrics Table**")
+            st.markdown("##### 📋 **Detailed Metrics Table**")
             metrics_detail_df = pd.DataFrame([
                 {"Metric": "Accuracy", "Value": f"{metrics['accuracy']:.4f}"},
                 {"Metric": "AUC Score", "Value": f"{metrics['auc']:.4f}" if metrics['auc'] is not None else "N/A"},
@@ -195,7 +180,7 @@ def main():
             st.dataframe(metrics_detail_df, use_container_width=True, hide_index=True)
         
         # Classification Report - Full width below
-        st.markdown("#### 📊 **Classification Report**")
+        st.markdown("##### 📊 **Classification Report**")
         # Parse classification report into dataframe
         report_dict = classification_report(y_true, y_pred, output_dict=True)
         report_df = pd.DataFrame({
@@ -231,7 +216,8 @@ def main():
     st.markdown("---")
     st.markdown("""
         <div style='text-align: center; color: #666; padding: 10px;'>
-            📁 <b>Models Directory:</b> model/ | 🎓 <b>BITS Pilani - ML Assignment 2</b>
+            📁 <b>Models Directory:</b> model/ | 🎓 <b>BITS Pilani - ML Assignment 2</b><br>
+            👤 <b>By:</b> Paul J Palathingal | 🆔 <b>ID:</b> 2025AA05360
         </div>
     """, unsafe_allow_html=True)
 
