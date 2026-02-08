@@ -6,7 +6,7 @@ import joblib
 from sklearn.metrics import (
     accuracy_score, roc_auc_score,
     precision_score, recall_score, f1_score,
-    matthews_corrcoef, classification_report
+    matthews_corrcoef, classification_report, confusion_matrix
 )
 
 MODELS_DIR = Path("model")                 # where you saved .pkl models
@@ -118,6 +118,15 @@ def main():
         # Nicely formatted metrics table
         metrics_rows = [{"metric": k, "value": (v if v is not None else "N/A")} for k, v in metrics.items()]
         st.table(pd.DataFrame(metrics_rows))
+        
+        # Confusion Matrix
+        st.subheader("Confusion Matrix")
+        cm = confusion_matrix(y_true, y_pred)
+        cm_df = pd.DataFrame(cm, 
+                            index=['Actual: Benign (0)', 'Actual: Malignant (1)'],
+                            columns=['Predicted: Benign (0)', 'Predicted: Malignant (1)'])
+        st.table(cm_df)
+        
         # Classification report
         st.subheader("Classification Report")
         st.text(report_text)
