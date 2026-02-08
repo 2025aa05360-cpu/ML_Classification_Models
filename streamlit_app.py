@@ -54,6 +54,27 @@ def main():
     st.title("Breast Cancer Classification — Model Evaluation")
     st.caption("Select a trained model, download the saved test data, upload a test CSV, and view evaluation metrics plus the classification report.")
 
+    # Download and Upload in same line
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Download saved test_data.csv (if present)
+        if DEFAULT_TEST_PATH.exists():
+            with DEFAULT_TEST_PATH.open("rb") as f:
+                data_bytes = f.read()
+            st.download_button(
+                label="Download saved test_data.csv",
+                data=data_bytes,
+                file_name="test_data.csv",
+                mime="text/csv",
+            )
+        else:
+            st.info("Saved test_data.csv not found in workspace.")
+    
+    with col2:
+        # Upload test CSV
+        uploaded = st.file_uploader("Upload test CSV (columns: scaled features; optional 'target')", type=["csv"])
+
     # Model selection
     models = list_models(MODELS_DIR)
     if not models:
@@ -64,22 +85,6 @@ def main():
     model_path = models[model_name]
     model = load_model(model_path)
     st.success(f"Loaded model: {model_name}")
-
-    # Download saved test_data.csv (if present)
-    if DEFAULT_TEST_PATH.exists():
-        with DEFAULT_TEST_PATH.open("rb") as f:
-            data_bytes = f.read()
-        st.download_button(
-            label="Download saved test_data.csv",
-            data=data_bytes,
-            file_name="test_data.csv",
-            mime="text/csv",
-        )
-    else:
-        st.info("Saved test_data.csv not found in workspace.")
-
-    # Upload test CSV
-    uploaded = st.file_uploader("Upload test CSV (columns: scaled features; optional 'target')", type=["csv"])
 
     if uploaded is None:
         st.stop()
