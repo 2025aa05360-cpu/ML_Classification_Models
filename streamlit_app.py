@@ -106,11 +106,6 @@ def main():
     y_pred = model.predict(X)
     y_score = get_scores(model, X)
 
-    # Show predictions preview
-    st.subheader("Predictions preview")
-    preview = pd.DataFrame({"prediction": y_pred[:10]})
-    st.dataframe(preview, use_container_width=True)
-
     # Metrics - Side by side layout
     st.subheader("Model Performance Evaluation")
     if y_true is None:
@@ -118,8 +113,8 @@ def main():
     else:
         metrics, report_text = evaluate(y_true, y_pred, y_score)
         
-        # Create three columns for side-by-side display
-        col1, col2, col3 = st.columns(3)
+        # Create two columns for Evaluation Metrics and Confusion Matrix
+        col1, col2 = st.columns(2)
         
         with col1:
             st.markdown("#### Evaluation Metrics")
@@ -142,35 +137,35 @@ def main():
             st.table(cm_df)
             st.caption("0=Benign, 1=Malignant")
         
-        with col3:
-            st.markdown("#### Classification Report")
-            # Parse classification report into dataframe
-            report_dict = classification_report(y_true, y_pred, output_dict=True)
-            report_df = pd.DataFrame({
-                'Class': ['0 (Benign)', '1 (Malignant)', 'Accuracy', 'Macro Avg', 'Weighted Avg'],
-                'Precision': [
-                    f"{report_dict['0']['precision']:.3f}",
-                    f"{report_dict['1']['precision']:.3f}",
-                    "-",
-                    f"{report_dict['macro avg']['precision']:.3f}",
-                    f"{report_dict['weighted avg']['precision']:.3f}"
-                ],
-                'Recall': [
-                    f"{report_dict['0']['recall']:.3f}",
-                    f"{report_dict['1']['recall']:.3f}",
-                    "-",
-                    f"{report_dict['macro avg']['recall']:.3f}",
-                    f"{report_dict['weighted avg']['recall']:.3f}"
-                ],
-                'F1-Score': [
-                    f"{report_dict['0']['f1-score']:.3f}",
-                    f"{report_dict['1']['f1-score']:.3f}",
-                    f"{report_dict['accuracy']:.3f}",
-                    f"{report_dict['macro avg']['f1-score']:.3f}",
-                    f"{report_dict['weighted avg']['f1-score']:.3f}"
-                ]
-            })
-            st.table(report_df)
+        # Classification Report - Full width below
+        st.markdown("#### Classification Report")
+        # Parse classification report into dataframe
+        report_dict = classification_report(y_true, y_pred, output_dict=True)
+        report_df = pd.DataFrame({
+            'Class': ['0 (Benign)', '1 (Malignant)', 'Accuracy', 'Macro Avg', 'Weighted Avg'],
+            'Precision': [
+                f"{report_dict['0']['precision']:.3f}",
+                f"{report_dict['1']['precision']:.3f}",
+                "-",
+                f"{report_dict['macro avg']['precision']:.3f}",
+                f"{report_dict['weighted avg']['precision']:.3f}"
+            ],
+            'Recall': [
+                f"{report_dict['0']['recall']:.3f}",
+                f"{report_dict['1']['recall']:.3f}",
+                "-",
+                f"{report_dict['macro avg']['recall']:.3f}",
+                f"{report_dict['weighted avg']['recall']:.3f}"
+            ],
+            'F1-Score': [
+                f"{report_dict['0']['f1-score']:.3f}",
+                f"{report_dict['1']['f1-score']:.3f}",
+                f"{report_dict['accuracy']:.3f}",
+                f"{report_dict['macro avg']['f1-score']:.3f}",
+                f"{report_dict['weighted avg']['f1-score']:.3f}"
+            ]
+        })
+        st.table(report_df)
         
         if y_score is None:
             st.caption("⚠️ AUC not available for this model (no predict_proba/decision_function).")
