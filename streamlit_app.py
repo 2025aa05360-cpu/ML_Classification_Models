@@ -81,22 +81,10 @@ def main():
     # Upload test CSV
     uploaded = st.file_uploader("Upload test CSV (columns: scaled features; optional 'target')", type=["csv"])
 
-    # Evaluate either uploaded file or saved test_data.csv
-    src_choice = st.radio(
-        "Evaluation data source",
-        options=["Uploaded CSV", "Saved test_data.csv"],
-        index=0 if uploaded is not None else (1 if DEFAULT_TEST_PATH.exists() else 0),
-        help="Use the uploaded file if provided; otherwise the saved test_data.csv."
-    )
-
-    df = None
-    if src_choice == "Uploaded CSV" and uploaded is not None:
-        df = pd.read_csv(uploaded)
-    elif src_choice == "Saved test_data.csv" and DEFAULT_TEST_PATH.exists():
-        df = pd.read_csv(DEFAULT_TEST_PATH)
-
-    if df is None:
+    if uploaded is None:
         st.stop()
+
+    df = pd.read_csv(uploaded)
 
     # Separate features and target (if present)
     if "target" in df.columns:
@@ -132,7 +120,7 @@ def main():
             st.caption("AUC not available for this model (no predict_proba/decision_function).")
 
     st.divider()
-    st.caption(f"Models directory: {MODELS_DIR} • Saved test: {DEFAULT_TEST_PATH}")
+    st.caption(f"Models directory: {MODELS_DIR}")
 
 if __name__ == "__main__":
     main()
