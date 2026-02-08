@@ -53,42 +53,79 @@ def evaluate(y_true: np.ndarray, y_pred: np.ndarray, y_score: np.ndarray | None)
     return metrics, report_text
 
 def main():
-    st.title("Breast Cancer Classification — Model Evaluation")
-    st.caption("Select a trained model, download the saved test data, upload a test CSV, and view evaluation metrics plus the classification report.")
+    # Custom CSS for colorful styling
+    st.markdown("""
+        <style>
+        .main-header {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .metric-box {
+            background-color: #f0f2f6;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .success-box {
+            background-color: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Colorful header
+    st.markdown('<div class="main-header"><h1>🩺 Breast Cancer Classification — Model Evaluation</h1></div>', unsafe_allow_html=True)
+    st.markdown("### 📋 **Workflow Steps**")
+    st.markdown("**Step 1:** 📥 Download test dataset (if required) → **Step 2:** 📤 Upload test dataset → **Step 3:** 🤖 Select the model → **Step 4:** 📊 View evaluation metrics")
+    st.divider()
 
-    # Download and Upload in same line
+    # Download and Upload in same line with emojis
     col1, col2 = st.columns(2)
     
     with col1:
+        st.markdown("### 📥 **Step 1: Download Dataset**")
         # Download saved test_data.csv (if present)
         if DEFAULT_TEST_PATH.exists():
             with DEFAULT_TEST_PATH.open("rb") as f:
                 data_bytes = f.read()
             st.download_button(
-                label="Download saved test_data.csv",
+                label="⬇️ Download saved test_data.csv",
                 data=data_bytes,
                 file_name="test_data.csv",
                 mime="text/csv",
+                use_container_width=True
             )
         else:
-            st.info("Saved test_data.csv not found in workspace.")
+            st.info("💡 Saved test_data.csv not found in workspace.")
     
     with col2:
+        st.markdown("### 📤 **Step 2: Upload Dataset**")
         # Upload test CSV
-        uploaded = st.file_uploader("Upload test CSV (columns: scaled features; optional 'target')", type=["csv"])
+        uploaded = st.file_uploader("Drag and drop your test CSV file here", type=["csv"], label_visibility="collapsed")
 
-    # Model selection
+    st.divider()
+    
+    # Model selection with emoji
+    st.markdown("### 🤖 **Step 3: Select Model**")
     models = list_models(MODELS_DIR)
     if not models:
-        st.warning(f"No models found in {MODELS_DIR}. Train and save models first.")
+        st.error("❌ No models found in model/. Train and save models first.")
         return
 
-    model_name = st.selectbox("Select a model", options=list(models.keys()))
+    model_name = st.selectbox("Choose a classification model", options=list(models.keys()), label_visibility="collapsed")
     model_path = models[model_name]
     model = load_model(model_path)
-    st.success(f"Loaded model: {model_name}")
+    st.markdown(f'<div class="success-box">✅ <b>Successfully loaded model:</b> {model_name}</div>', unsafe_allow_html=True)
 
     if uploaded is None:
+        st.info("👆 Please upload a test dataset to continue")
         st.stop()
 
     df = pd.read_csv(uploaded)
